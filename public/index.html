@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>IDPAI</title>
+    <link rel="icon" type="image/x-icon" href="https://broadgpt.broadridge.net/favicon.ico" />
+    <style>
+      :root{
+        --bg: #f4f6f9;
+        --card: #ffffff;
+        --accent: #0b5cff;
+        --muted: #6b7280;
+        --success: #0f5132;
+      }
+      html,body{height:90%;}
+      body {
+        font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+        background: linear-gradient(180deg,#f7f9fc 0%,var(--bg) 100%);
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        padding: 32px;
+        min-height: 90vh;
+        color: #333;
+      }
+      
+      .panel {
+        width: 100%;
+        max-width: 90%;
+        background: var(--card);
+        border-radius: 12px;
+        box-shadow: 0 8px 30px rgba(16,24,40,0.08);
+        padding: 0 28px;
+        flex: 1;
+      }
+      footer{
+        width:100%;
+        max-width:90%;
+        margin:10px auto 7px auto;
+        color:var(--muted);
+        font-size:13px;
+        text-align:center;
+        border-top:1px solid #f1f5f9;
+      }
+      .header {
+        display:flex;
+        align-items:center;
+        gap:16px;
+        margin-bottom:18px;
+      }
+      .logo {
+        width:5cm;height:5cm;border-radius:8px;background:--bg;
+        display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:18px;overflow:hidden;
+        overflow: hidden;
+        height: 100px;
+        max-height: 300px;
+        position: relative;
+      }
+      .logo img{width:100%;height:100%;object-fit:contain;display:block;
+      display: block;
+        width: 100%;
+        height: auto;
+        position: relative;
+      }
+      h1{font-size:20px;margin:0}
+      p.lead{margin:0;color:var(--muted);font-size:13px}
+
+      .grid{display:grid;grid-template-columns:1fr;margin-top:18px;gap:18px}
+
+      /* Upload area */
+      .upload-area{
+        border:2px dashed rgba(11,92,255,0.12);
+        border-radius:10px;padding:20px;background:#fbfdff;min-height:23vh;display:flex;flex-direction:column;gap:12px;
+        align-items:flex-start;justify-content:center;cursor:pointer;
+      }
+      .dropzone{width:100%;display:flex;align-items:center;gap:14px}
+      .dz-icon{width:56px;height:56px;border-radius:8px;background:rgba(11,92,255,0.08);display:flex;align-items:center;justify-content:center;color:var(--accent);font-weight:700}
+      .dz-text{color:var(--muted)}
+      .file-meta{margin-top:6px;color:var(--muted);font-size:13px}
+      input[type=file]{display:none}
+      .btn{background:var(--accent);color:white;padding:10px 14px;border-radius:8px;border:none;cursor:pointer}
+      /* Add-field button variations */
+      .add-field-btn{background:var(--accent);color:white}
+      .add-field-btn:disabled{background:#f1f5f9;color:#9aa6c9;cursor:not-allowed;opacity:0.8;border:1px solid #e6eefc}
+      .add-field-btn:not(:disabled){box-shadow:0 6px 18px rgba(11,92,255,0.12)}
+
+      /* Controls */
+      .controls{background:#fbfbfd;padding:14px;border-radius:10px;border:1px solid #eef2ff}
+      .section{display:flex;flex-direction:column;gap:10px}
+      .option-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+      .option-left{display:flex;align-items:center;gap:10px}
+      .checkbox{width:18px;height:18px;border:1px solid #d1d5db;border-radius:4px;display:inline-block;background:white}
+      .sel-btn{width:40px;height:40px;border-radius:8px;border:1px solid #e6eefc;background:white;color:var(--accent);cursor:pointer;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
+      .sel-btn.selected{background:var(--accent);color:white;border-color:transparent}
+      .sel-btn.expanded{box-shadow:0 4px 14px rgba(11,92,255,0.12)}
+
+      .kv-area{margin-top:8px;border-radius:8px;padding:10px;background:#ffffff;border:1px dashed #e6eefc}
+      .kv-area{margin-top:8px;border-radius:8px;padding:10px;background:#ffffff;border:1px dashed #e6eefc;max-height:360px;overflow:auto}
+      .kv-header{font-weight:600;margin-bottom:8px;color:var(--accent);font-size:13px}
+      .kv-table { width: 100%; border-collapse: collapse; margin-bottom: 8px; font-size: 14px; }
+      .kv-table th, .kv-table td { border: 1px solid #e6eefc; padding: 6px 8px; text-align: left; vertical-align: top; }
+      .kv-table th { background: #f7f9fc; color: var(--accent); font-weight: 600; }
+      .kv-table td { background: #fff; }
+      .kv-table input, .kv-table select { width: 100%; box-sizing: border-box; padding: 8px; border: 1px solid #e6e7ea; border-radius: 6px; font-size: 14px; font-family: inherit; color: #333; }
+      .kv-table input.kv-field.invalid { border-color: #ff4d4f; box-shadow: 0 6px 18px rgba(255,77,79,0.12); }
+      .kv-table .kv-error { color: #ff4d4f; font-size: 12px; margin-top: 2px; font-weight: 500; }
+      .kv-table .remove { background: #ff4d4f; color: white; border: none; padding: 6px 8px; border-radius: 6px; cursor: pointer; }
+                  .kv-row input.kv-field.invalid {
+                    border-color: #ff4d4f;
+                    box-shadow: 0 6px 18px rgba(255,77,79,0.12);
+                  }
+                  .kv-row .kv-error {
+                    color: #ff4d4f;
+                    font-size: 12px;
+                    margin-left: 4px;
+                    font-weight: 500;
+                  }
+                  .kv-row select.kv-extra, .kv-row input.kv-num {
+                    min-width: 60px;
+                    padding: 8px 12px;
+                    border: 1px solid #e6e7ea;
+                    border-radius: 6px;
+                    background: #fff;
+                    font-size: 14px;
+                    color: #374151;
+                    font-family: inherit;
+                    box-sizing: border-box;
+                    margin-left: 8px;
+                    margin-right: 8px;
+                  }
+                  .kv-row select.kv-extra:disabled {
+                    background: #f1f5f9;
+                    color: #9aa6c9;
+                    cursor: not-allowed;
+                    opacity: 0.8;
+                    border: 1px solid #e6eefc;
+                  }
+                  .output-type-group {
+                    display: flex;
+                    align-items: center;
+                    gap: 18px;
+                    margin: 18px 0 0 0;
+                    padding: 12px 18px;
+                    border-radius: 8px;
+                    background: #fbfbfd;
+                    border: 1px solid #eef2ff;
+                    font-size: 15px;
+                    color: var(--muted);
+                    font-family: inherit;
+                  }
+                  .output-type-radio {
+                    accent-color: var(--accent);
+                    margin-right: 6px;
+                  }
+                  .output-type-label {
+                    font-weight: 500;
+                    color: var(--muted);
+                    font-size: 15px;
+                    margin-right: 12px;
+                    font-family: inherit;
+                  }
+            .kv-row select.kv-type {
+  flex: 1 1 160px;
+  min-width: 120px;
+  height: 38px;
+  padding: 8px 12px;
+  border: 1px solid #e6e7ea;
+  border-radius: 6px;
+  background: #fff;
+  font-size: 14px;
+  color: #374151;
+  font-family: inherit;
+  box-sizing: border-box;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.kv-row select.kv-type:focus {
+  outline: none;
+  border-color: rgba(11,92,255,0.18);
+  box-shadow: 0 6px 18px rgba(11,92,255,0.06) !important;
+}
+.kv-row select.kv-type:disabled {
+  background: #f1f5f9;
+  color: #9aa6c9;
+  cursor: not-allowed;
+  opacity: 0.8;
+  border: 1px solid #e6eefc;
+}
+.kv-row select.kv-type:hover:not(:disabled) {
+  border-color: #0b5cff;
+}
+      .kv-row input.invalid{border-color:#ff6b6b;box-shadow:0 6px 18px rgba(255,107,107,0.08)}
+      /* Softer focus for inputs to avoid harsh dark borders */
+      .kv-row input:focus, .controls input:focus, .upload-area input:focus, input[type="text"]:focus, textarea:focus {
+        outline: none;
+        border-color: rgba(11,92,255,0.18);
+        box-shadow: 0 6px 18px rgba(11,92,255,0.06);
+      }
+      .kv-row .remove{background:#ff4d4f;color:white;border:none;padding:6px 8px;border-radius:6px;cursor:pointer;margin-left:6px}
+      .controls{background:#fbfbfd;padding:14px;border-radius:10px;border:1px solid #eef2ff;max-height:640px;overflow:auto}
+
+      /* Custom scrollbar - WebKit */
+      .controls::-webkit-scrollbar, .kv-area::-webkit-scrollbar, .upload-area::-webkit-scrollbar { height:10px; width:10px }
+      .controls::-webkit-scrollbar-track, .kv-area::-webkit-scrollbar-track, .upload-area::-webkit-scrollbar-track { background: #f1f5f9; border-radius:10px }
+      .controls::-webkit-scrollbar-thumb, .kv-area::-webkit-scrollbar-thumb, .upload-area::-webkit-scrollbar-thumb { background: linear-gradient(180deg,var(--accent),#7b61ff); border-radius:10px }
+      .controls::-webkit-scrollbar-thumb:hover, .kv-area::-webkit-scrollbar-thumb:hover { background: #074ecf }
+
+      /* Firefox */
+      .controls, .kv-area, .upload-area { scrollbar-width: thin; scrollbar-color: var(--accent) #f1f5f9 }
+
+      .response{margin-top:12px;padding:10px;border-radius:8px;background:#eef7ef;color:var(--success);display:none}
+
+      /* User profile dropdown */
+      .user-profile{position:fixed;top:10px;right:calc((100vw - 98.3vw) / 2);z-index:1001}
+      .user-icon{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#7b61ff);display:flex;align-items:center;justify-content:center;color:white;font-weight:600;cursor:pointer;font-size:16px;border:2px solid white;box-shadow:0 2px 8px rgba(11,92,255,0.15)}
+      .user-icon:hover{box-shadow:0 4px 12px rgba(11,92,255,0.25)}
+      .dropdown-menu{position:absolute;top:50px;right:0;background:white;border-radius:8px;box-shadow:0 8px 24px rgba(16,24,40,0.12);min-width:125px;display:none;z-index:1000;border:1px solid #e6eefc}
+      .dropdown-menu.show{display:block}
+      .dropdown-item{text-align: center;padding:12px 16px;cursor:pointer;color:#374151;font-size:14px;border-bottom:1px solid #f1f5f9}
+      .dropdown-item:last-child{border-bottom:none}
+      .dropdown-item:hover{background:#f8fafc;color:var(--accent)}
+      .dropdown-divider{height:1px;background:#e6eefc;margin:4px 0}
+
+      @media(max-width:900px){.grid{grid-template-columns:1fr;}.controls{order:2}}
+    </style>
+  </head>
+  <body>
+    <div class="user-profile">
+      <div class="user-icon" id="userIcon" tabindex="0">JD</div>
+      <div class="dropdown-menu" id="dropdownMenu">
+        <div class="dropdown-item" style="cursor:default;font-weight:600;color:var(--accent)">
+          John Doe
+        </div>
+        <div class="dropdown-divider"></div>
+        <div class="dropdown-item" onclick="alert('FAQs')">
+          FAQs
+        </div>
+        <div class="dropdown-divider"></div>
+        <div class="dropdown-item" onclick="alert('Logging out...')" style="color:#ff4d4f">
+          Logout
+        </div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="header">
+        <div class="logo"><img src="https://www.broadridge.com/_assets/images/all-generic-site-images/br-facebook-share.jpg" alt="Broadridge logo" /></div>
+        <div>
+          <h1>Secure Document Upload — Mock</h1>
+          <p class="lead">Only PDF and image formats accepted (including TIFF). Expand items to add key/value metadata.</p>
+        </div>
+        <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
+          <button id="submitBtn" class="btn" disabled style="background:#0b5cff;opacity:0.6">Submit & Extract</button>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div>
+          <div class="upload-area" id="uploadArea" tabindex="0">
+            <div class="dropzone">
+              <div class="dz-icon">FILE</div>
+              <div>
+                <div class="dz-text"><strong>Drop files here</strong> or <label for="fileInput" style="color:var(--accent);cursor:pointer">browse</label></div>
+                <div class="file-meta" id="fileMeta">Accepted: <strong>.pdf, .tif, .tiff, .png, .jpg, .jpeg, .bmp, .gif</strong></div>
+              </div>
+            </div>
+
+            <input id="fileInput" type="file" accept=".pdf,image/*,.tif,.tiff" />
+            <div id="selectedInfo" style="width:100%;font-size:13px;color:var(--muted)"></div>
+            <div style="margin-top:auto;display:flex;gap:10px;width:100%">
+              <button class="btn" id="clearBtn" style="background:#e6eefc;color:var(--accent)">Clear</button>
+            </div>
+
+            <div id="responseBox" class="response" role="status"></div>
+          </div>
+
+          <!-- Output type radio group placed here -->
+          <div id="outputTypeGroup" class="output-type-group">
+            <span class="output-type-label">Output type:</span>
+            <label><input type="radio" name="outputType" value="json" class="output-type-radio" checked> JSON</label>
+            <label><input type="radio" name="outputType" value="text" class="output-type-radio"> Text</label>
+          </div>
+
+          <div style="margin-top:14px;color:var(--muted);font-size:13px;font-family:inherit;">
+            Tip: Use the expand [+] on the right to attach metadata key/value pairs for each selected category.
+          </div>
+        </div>
+
+        <aside class="controls">
+          <div class="section">
+            <!-- Option rows: checkbox + expand -->
+
+            <div class="option-row">
+              <div class="option-left">
+                <button class="sel-btn" data-target="raw" id="sel_raw" aria-expanded="false">+</button>
+                <label for="sel_raw">Raw text</label>
+              </div>
+            </div>
+            <div id="raw" class="kv-area" style="display:none"></div>
+
+
+            <div class="option-row">
+              <div class="option-left">
+                <button class="sel-btn" data-target="queries" id="sel_queries" aria-expanded="false">+</button>
+                <label for="sel_queries">Queries</label>
+              </div>
+            </div>
+            <div id="queries" class="kv-area" style="display:none"></div>
+
+
+            <div class="option-row">
+              <div class="option-left">
+                <button class="sel-btn" data-target="forms" id="sel_forms" aria-expanded="false">+</button>
+                <label for="sel_forms">Forms</label>
+              </div>
+            </div>
+            <div id="forms" class="kv-area" style="display:none"></div>
+
+
+            <div class="option-row">
+              <div class="option-left">
+                <button class="sel-btn" data-target="signatures" id="sel_signatures" aria-expanded="false">+</button>
+                <label for="sel_signatures">Signatures</label>
+              </div>
+            </div>
+            <div id="signatures" class="kv-area" style="display:none"></div>
+
+            <div class="option-row">
+              <div class="option-left">
+                <button class="sel-btn" data-target="tables" id="sel_tables" aria-expanded="false">+</button>
+                <label for="sel_tables">Tables</label>
+              </div>
+            </div>
+            <div id="tables" class="kv-area" style="display:none"></div>
+          </div>
+        </aside>
+      </div>
+    
+    <footer>
+      Intelligent Document Processing — © 2025 Broadridge. All rights reserved.
+    </footer>
+    </div>
+    
+
+    <script>
+      // Basic DOM refs
+      const fileInput = document.getElementById('fileInput');
+      const uploadArea = document.getElementById('uploadArea');
+      const selectedInfo = document.getElementById('selectedInfo');
+      const submitBtn = document.getElementById('submitBtn');
+      const clearBtn = document.getElementById('clearBtn');
+      const responseBox = document.getElementById('responseBox');
+      let lastResponseSet = 0;
+
+      // User profile dropdown toggle
+      const userIcon = document.getElementById('userIcon');
+      const dropdownMenu = document.getElementById('dropdownMenu');
+      
+      userIcon.addEventListener('click', (e) => {
+        e.stopPropagation();
+        dropdownMenu.classList.toggle('show');
+      });
+
+      // Close dropdown when clicking outside
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('.user-profile')) {
+          dropdownMenu.classList.remove('show');
+        }
+      });
+
+      // Keyboard accessibility for user icon
+      userIcon.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          dropdownMenu.classList.toggle('show');
+        }
+      });
+
+      // Utility: validate file type (PDF or image)
+      function isValidFile(file){
+        if(!file) return false;
+        const t = file.type || '';
+        const name = (file.name||'').toLowerCase();
+        const isPdf = t === 'application/pdf' || name.endsWith('.pdf');
+        const isImage = t.startsWith('image/') || name.match(/\.(tif|tiff|png|jpe?g|bmp|gif)$/);
+        return isPdf || isImage;
+      }
+
+      // File selection and drag-drop
+      fileInput.addEventListener('change', ()=>{
+        if(fileInput.files.length > 1){
+          alert('Only one file is allowed per submission. Keeping the first file.');
+        }
+        const f = fileInput.files[0];
+        if(!f){ selectedInfo.textContent = ''; return; }
+        if(!isValidFile(f)){
+          alert('Invalid file type. Please select a PDF or image file (including TIFF).');
+          fileInput.value = '';
+          selectedInfo.textContent = '';
+          return;
+        }
+        selectedInfo.textContent = `Selected: ${f.name} — ${Math.round(f.size/1024)} KB`;
+        updateSubmitState();
+      });
+
+      // Drag and drop handlers
+      uploadArea.addEventListener('dragover', (e)=>{ e.preventDefault(); uploadArea.style.borderColor = 'rgba(11,92,255,0.3)'; });
+      uploadArea.addEventListener('dragleave', ()=>{ uploadArea.style.borderColor = 'rgba(11,92,255,0.12)'; });
+      uploadArea.addEventListener('drop', (e)=>{
+        e.preventDefault(); uploadArea.style.borderColor = 'rgba(11,92,255,0.12)';
+        const files = e.dataTransfer.files;
+        if(!files || files.length === 0) return;
+        if(files.length > 1){ alert('Only one file is allowed per submission. The first file will be used.'); }
+        const f = files[0];
+        if(!isValidFile(f)) { alert('Invalid file type.'); return; }
+        // assign to file input (single file)
+        const dataTransfer = new DataTransfer(); dataTransfer.items.add(f); fileInput.files = dataTransfer.files;
+        selectedInfo.textContent = `Selected: ${f.name} — ${Math.round(f.size/1024)} KB`;
+        updateSubmitState();
+      });
+
+      // Click anywhere on upload area (except on buttons/inputs/labels) to open file picker
+      uploadArea.addEventListener('click', (e) => {
+        const tag = e.target.tagName;
+        if (e.target.closest('button') || tag === 'INPUT' || tag === 'LABEL' || e.target.closest('a')) return;
+        fileInput.click();
+      });
+
+      // Selector button: toggles selection + expansion for each source
+      document.querySelectorAll('.sel-btn').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          const target = btn.dataset.target;
+          const area = document.getElementById(target);
+          const expanded = area.style.display !== 'none' && area.style.display !== '';
+          if(expanded){
+            // collapse and unselect — clear any added rows so data is not retained
+            area.style.display = 'none';
+            area.innerHTML = '';
+            btn.textContent = '+'; btn.setAttribute('aria-expanded','false');
+            btn.classList.remove('expanded','selected');
+          } else {
+            // expand and select
+            area.style.display = 'block';
+            btn.textContent = '-'; btn.setAttribute('aria-expanded','true');
+            btn.classList.add('expanded','selected');
+            if(area.children.length === 0) buildKvArea(area);
+          }
+          updateSubmitState();
+        });
+      });
+
+      function buildKvArea(area){
+        // header showing source label
+        const id = area.id || '';
+        const labels = { raw: 'Raw text', queries: 'Queries', forms: 'Forms', signatures: 'Signatures', tables: 'Tables' };
+        const header = document.createElement('div'); header.className = 'kv-header'; header.textContent = 'Source: ' + (labels[id] || id);
+        area.appendChild(header);
+
+        // Table for rows
+        const table = document.createElement('table');
+        table.className = 'kv-table';
+        table.style.width = '100%';
+        table.style.borderCollapse = 'collapse';
+        table.style.marginBottom = '8px';
+        // Table header
+        const thead = document.createElement('thead');
+        const tr = document.createElement('tr');
+        const thField = document.createElement('th'); thField.textContent = 'Field Name';
+        const thSearch = document.createElement('th'); thSearch.textContent = (id === 'queries') ? 'searchQuery' : 'searchRegex';
+        tr.appendChild(thField); tr.appendChild(thSearch);
+        if (id === 'raw') {
+          const thExtra = document.createElement('th'); thExtra.textContent = 'Group/Match'; tr.appendChild(thExtra);
+          const thOcc = document.createElement('th'); thOcc.textContent = 'Group/Match #'; tr.appendChild(thOcc);
+        } else if (id === 'forms') {
+          const thExtra = document.createElement('th'); thExtra.textContent = 'Match'; tr.appendChild(thExtra);
+          const thOcc = document.createElement('th'); thOcc.textContent = 'Group/Match #'; tr.appendChild(thOcc);
+        }
+        const thType = document.createElement('th'); thType.textContent = 'Type'; tr.appendChild(thType);
+        const thRem = document.createElement('th'); thRem.textContent = ''; tr.appendChild(thRem);
+        thead.appendChild(tr); table.appendChild(thead);
+
+        // Table body
+        const tbody = document.createElement('tbody');
+        table.appendChild(tbody);
+        area.appendChild(table);
+
+        // top add button
+        const add = document.createElement('button'); add.textContent = 'Add field'; add.className='btn add-field-btn'; add.style.padding='6px 10px'; add.style.fontSize='13px'; add.style.marginBottom='8px';
+        add.disabled = true; // require current row to be completed before adding another
+        add.addEventListener('click',(ev)=>{ ev.preventDefault(); if(!add.disabled) appendRow(area, '', '', '', id, tbody); });
+        area.appendChild(add);
+        appendRow(area, '', '', '', id, tbody);
+      }
+
+      // Each row now collects: Field Name, Search Regex, Type
+      function appendRow(area, fieldName='', searchRegex='', type=''){
+        // Accepts area, fieldName, searchRegex, type, sourceId, tbody
+        const sourceId = arguments[4] || (area && area.id) || '';
+        const tbody = arguments[5];
+        const tr = document.createElement('tr');
+        // Field name input
+        const tdField = document.createElement('td');
+        tdField.style.verticalAlign = 'top';
+        tdField.style.padding = '4px';
+        const inpField = document.createElement('input'); inpField.type='text'; inpField.className='kv-field'; inpField.placeholder='Field name (e.g. Contract_Number)'; inpField.value = fieldName; inpField.style.width = '100%';
+        // Error message span (now below input)
+        const errorSpan = document.createElement('div'); errorSpan.className = 'kv-error'; errorSpan.style.display = 'none'; errorSpan.style.width = '100%'; errorSpan.style.marginTop = '2px';
+        tdField.appendChild(inpField);
+        tdField.appendChild(errorSpan);
+        tr.appendChild(tdField);
+
+        // Dynamic search field
+        const tdSearch = document.createElement('td'); tdSearch.style.verticalAlign = 'top'; tdSearch.style.padding = '4px';
+        let inpSearch;
+        if (sourceId === 'queries') {
+          inpSearch = document.createElement('input'); inpSearch.type='text'; inpSearch.className='kv-search'; inpSearch.placeholder='searchQuery'; inpSearch.value = searchRegex; inpSearch.style.width = '100%';
+        } else {
+          inpSearch = document.createElement('input'); inpSearch.type='text'; inpSearch.className='kv-search'; inpSearch.placeholder='searchRegex'; inpSearch.value = searchRegex; inpSearch.style.width = '100%';
+        }
+        tdSearch.appendChild(inpSearch);
+        tr.appendChild(tdSearch);
+
+        // Extra controls for raw_text/forms
+        let extraSelect, extraNum;
+        if (sourceId === 'raw') {
+          const tdExtra = document.createElement('td'); tdExtra.style.verticalAlign = 'top'; tdExtra.style.padding = '4px';
+          extraSelect = document.createElement('select'); extraSelect.className = 'kv-extra';
+          ['regexGroup', 'regexMatch'].forEach(opt => {
+            const option = document.createElement('option'); option.value = opt; option.textContent = opt;
+            extraSelect.appendChild(option);
+          });
+          tdExtra.appendChild(extraSelect);
+          tr.appendChild(tdExtra);
+          const tdOcc = document.createElement('td'); tdOcc.style.verticalAlign = 'top'; tdOcc.style.padding = '4px';
+          extraNum = document.createElement('input'); extraNum.type = 'number'; extraNum.className = 'kv-num'; extraNum.value = 1; extraNum.min = 1; extraNum.style.width = '100%';
+          tdOcc.appendChild(extraNum);
+          tr.appendChild(tdOcc);
+        } else if (sourceId === 'forms') {
+          const tdExtra = document.createElement('td'); tdExtra.style.verticalAlign = 'top'; tdExtra.style.padding = '4px';
+          extraSelect = document.createElement('select'); extraSelect.className = 'kv-extra';
+          const option = document.createElement('option'); option.value = 'regexMatch'; option.textContent = 'regexMatch'; extraSelect.appendChild(option);
+          extraSelect.disabled = true;
+          tdExtra.appendChild(extraSelect);
+          tr.appendChild(tdExtra);
+          const tdOcc = document.createElement('td'); tdOcc.style.verticalAlign = 'top'; tdOcc.style.padding = '4px';
+          extraNum = document.createElement('input'); extraNum.type = 'number'; extraNum.className = 'kv-num'; extraNum.value = 1; extraNum.min = 1; extraNum.style.width = '100%';
+          tdOcc.appendChild(extraNum);
+          tr.appendChild(tdOcc);
+        }
+
+        // Type dropdown
+        const tdType = document.createElement('td'); tdType.style.verticalAlign = 'top'; tdType.style.padding = '4px';
+        const inpType = document.createElement('select'); inpType.className='kv-type'; inpType.style.width = '100%';
+        inpType.style.transition = 'box-shadow 0.2s, border-color 0.2s';
+        inpType.style.boxShadow = 'none';
+        inpType.style.borderColor = '#e6e7ea';
+        inpType.addEventListener('focus', function() {
+          inpType.style.boxShadow = '0 6px 18px rgba(11,92,255,0.12)';
+          inpType.style.borderColor = '#0b5cff';
+        });
+        inpType.addEventListener('blur', function() {
+          inpType.style.boxShadow = 'none';
+          inpType.style.borderColor = '#e6e7ea';
+        });
+        inpType.addEventListener('mousedown', function() {
+          inpType.style.boxShadow = '0 8px 24px rgba(11,92,255,0.18)';
+        });
+        inpType.addEventListener('mouseup', function() {
+          inpType.style.boxShadow = '0 6px 18px rgba(11,92,255,0.12)';
+        });
+        const typeOptions = [
+          'string', 'boolean', 'number', 'float', 'double', 'decimal', 'date', 'datetime', 'other'
+        ];
+        typeOptions.forEach(opt => {
+          const option = document.createElement('option');
+          option.value = opt;
+          option.textContent = opt.charAt(0).toUpperCase() + opt.slice(1);
+          inpType.appendChild(option);
+        });
+        if (type) {
+          let found = false;
+          for (let i = 0; i < inpType.options.length; i++) {
+            if (inpType.options[i].value === type) {
+              inpType.selectedIndex = i;
+              found = true;
+              break;
+            }
+          }
+          if (!found) {
+            inpType.value = 'other';
+          }
+        }
+        tdType.appendChild(inpType);
+        tr.appendChild(tdType);
+
+        // Remove button
+        const tdRem = document.createElement('td'); tdRem.style.verticalAlign = 'top'; tdRem.style.padding = '4px';
+        const rem = document.createElement('button'); rem.className='remove'; rem.textContent='Remove';
+        rem.addEventListener('click', ()=>{ tr.remove(); updateSubmitState(); updateAddButtonState(area); });
+        tdRem.appendChild(rem);
+        tr.appendChild(tdRem);
+
+        // Field name validation
+        function validateFieldName() {
+          const val = inpField.value.trim();
+          // Only allow letters, numbers, underscores
+          if (!/^\w+$/.test(val)) {
+            inpField.classList.add('invalid');
+            errorSpan.textContent = 'No spaces or special characters allowed.';
+            errorSpan.style.display = 'block';
+            return false;
+          } else {
+            inpField.classList.remove('invalid');
+            errorSpan.textContent = '';
+            errorSpan.style.display = 'none';
+            return true;
+          }
+        }
+
+        inpField.addEventListener('input', ()=>{
+          validateFieldName();
+          updateSubmitState();
+          updateAddButtonState(area);
+        });
+        inpType.addEventListener('change', ()=>{ updateSubmitState(); updateAddButtonState(area); });
+
+        tbody.appendChild(tr);
+        updateAddButtonState(area);
+      }
+
+      // Validate visible/enabled rows: require Field name and Type for all visible rows
+      function validateVisibleRows(){
+        const ids = ['raw','queries','forms','signatures','tables'];
+        for(const id of ids){
+          const selBtn = document.getElementById('sel_' + id);
+          if(!selBtn || !selBtn.classList.contains('selected')) continue; // only visible/selected areas
+          const area = document.getElementById(id);
+          if(!area) continue;
+          const rows = [...area.querySelectorAll('.kv-row')];
+          for(const r of rows){
+            const inputs = r.querySelectorAll('input');
+            const field = inputs[0];
+            const type = inputs[2];
+            const fieldVal = field ? field.value.trim() : '';
+            const typeVal = type ? type.value.trim() : '';
+            // mark invalid if missing
+            if(!fieldVal){ if(field) field.classList.add('invalid'); if(field) field.focus(); responseBox.style.display='block'; responseBox.textContent='Please fill required Field name and Type for all visible rows.'; lastResponseSet = Date.now(); return false; }
+            if(!typeVal){ if(type) type.classList.add('invalid'); if(type) type.focus(); responseBox.style.display='block'; responseBox.textContent='Please fill required Field name and Type for all visible rows.'; lastResponseSet = Date.now(); return false; }
+          }
+        }
+        // clear any prior message
+        responseBox.style.display='none'; responseBox.textContent='';
+        return true;
+      }
+
+      // Submit action: collect file, options, kv pairs -> POST request
+      // Output type radios
+      let outputType = 'json';
+      // Output type radio group event listeners
+      document.querySelectorAll('input[type=radio][name=outputType]').forEach(radio => {
+        radio.addEventListener('change', function() {
+          outputType = this.value;
+        });
+      });
+
+      submitBtn.addEventListener('click', async ()=>{
+        // remove previous invalid markers when attempting submit
+        document.querySelectorAll('.kv-row input.invalid').forEach(i=>i.classList.remove('invalid'));
+        let valid = true;
+        // Validate all field names
+        document.querySelectorAll('.kv-row .kv-field').forEach(inp => {
+          if (!/^\w+$/.test(inp.value.trim())) {
+            inp.classList.add('invalid');
+            valid = false;
+          }
+        });
+        if(!validateVisibleRows() || !valid) return; 
+        responseBox.style.display = 'none'; responseBox.textContent = '';
+        const f = fileInput.files[0];
+        if(!f){ alert('Please choose a file first.'); return; }
+        if(!isValidFile(f)){ alert('Invalid file type.'); return; }
+
+        // collect selections and kvs -> flatten into array of fieldMetadata objects
+        const fieldMetadata = [];
+        ['raw','queries','forms','signatures','tables'].forEach(id=>{           
+          const selBtn = document.getElementById('sel_' + id);
+          const checked = selBtn && selBtn.classList.contains('selected');
+          if(!checked) return;
+          const area = document.getElementById(id);
+          if(area){
+            const rows = [...area.querySelectorAll('.kv-row')];
+            rows.forEach(r=>{
+              const inputs = r.querySelectorAll('input,select');
+              const fieldName = inputs[0] ? inputs[0].value.trim() : '';
+              let searchRegex = '', searchQuery = '', regexGroup, regexMatch;
+              let typeVal = '', occurrenceIndex = 1;
+              // ignore completely blank rows
+              if(fieldName === '') return;
+              // Map source labels to match API expectation
+              const sourceMap = { raw: 'raw_text', queries: 'queries', forms: 'forms', signatures: 'signatures', tables: 'tables' };
+              const source = sourceMap[id] || id;
+              typeVal = inputs[inputs.length-2] ? inputs[inputs.length-2].value : '';
+              // queries
+              if (id === 'queries') {
+                searchQuery = inputs[1] ? inputs[1].value.trim() : '';
+                fieldMetadata.push({ source, fieldName, searchQuery, type: typeVal });
+              } else if (id === 'raw') {
+                searchRegex = inputs[1] ? inputs[1].value.trim() : '';
+                const extraSelect = inputs[2] ? inputs[2].value : 'regexGroup';
+                const extraNum = inputs[3] ? parseInt(inputs[3].value) : 1;
+                fieldMetadata.push({ source, fieldName, searchRegex, type: typeVal, [extraSelect]: extraNum });
+              } else if (id === 'forms') {
+                searchRegex = inputs[1] ? inputs[1].value.trim() : '';
+                const extraNum = inputs[3] ? parseInt(inputs[3].value) : 1;
+                fieldMetadata.push({ source, fieldName, searchRegex, type: typeVal, regexMatch: extraNum });
+              } else {
+                searchRegex = inputs[1] ? inputs[1].value.trim() : '';
+                fieldMetadata.push({ source, fieldName, searchRegex, type: typeVal });
+              }
+            });
+          }
+        });
+
+        // Convert file to base64
+        const reader = new FileReader();
+        reader.onload = async function(e) {
+          const arrayBuffer = e.target.result;
+          const bytes = new Uint8Array(arrayBuffer);
+          let binary = '';
+          for (let i = 0; i < bytes.byteLength; i++) {
+            binary += String.fromCharCode(bytes[i]);
+          }
+          const base64Content = btoa(binary);
+
+          // Build JSON payload matching API structure
+          const payload = {
+            fileName: f.name,
+            fileContent: base64Content,
+            clientId: "BROADRIDGE-CLIENT",
+            docType: "NOBO",
+            fieldMetadata: fieldMetadata,
+            outputType: outputType
+          };
+
+          // API endpoint (local Flask proxy)
+          const apiEndpoint = 'http://localhost:5000/api/';
+          submitBtn.disabled = true; submitBtn.textContent = 'Submitting...'; submitBtn.style.opacity = 0.6;
+          
+          try{
+            const res = await fetch(apiEndpoint, { 
+              method: 'POST', 
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify(payload)
+            });
+            
+            if(res.ok) {
+              const result = await res.json();
+              responseBox.style.display='block'; 
+              responseBox.style.background='#eef7ef';
+              responseBox.style.color='var(--success)';
+              responseBox.textContent = 'Success! Extracted ' + Object.keys(result.results || {}).length + ' fields. Check console for details.';
+              console.log('API Response:', result);
+              lastResponseSet = Date.now();
+            } else {
+              const errorText = await res.text();
+              responseBox.style.display='block';
+              responseBox.style.background='#fee';
+              responseBox.style.color='#c00';
+              responseBox.textContent = 'Error ' + res.status + ': ' + errorText;
+              lastResponseSet = Date.now();
+            }
+          }catch(err){
+            responseBox.style.display='block';
+            responseBox.style.background='#fee';
+            responseBox.style.color='#c00';
+            responseBox.textContent = 'Upload failed: '+err.message;
+            lastResponseSet = Date.now();
+          }finally{ 
+            submitBtn.disabled=false; 
+            submitBtn.textContent='Submit & Extract'; 
+            submitBtn.style.opacity = 1; 
+          }
+        };
+        
+        reader.onerror = function() {
+          responseBox.style.display='block';
+          responseBox.style.background='#fee';
+          responseBox.style.color='#c00';
+          responseBox.textContent = 'Failed to read file';
+          lastResponseSet = Date.now();
+        };
+        
+        reader.readAsArrayBuffer(f);
+      });
+
+      clearBtn.addEventListener('click', ()=>{ fileInput.value=''; selectedInfo.textContent=''; responseBox.style.display='none'; responseBox.textContent=''; updateSubmitState(); });
+
+      // Enable submit button only when a file is present and at least one complete metadata row exists
+      function updateSubmitState(){
+        const f = fileInput.files[0];
+        if(!f){ submitBtn.disabled = true; submitBtn.style.opacity = 0.6; return; }
+        // require at least one metadata row with both fieldName and type filled in a selected source
+        const ids = ['raw','queries','forms','signatures','tables'];
+        let hasComplete = false;
+        for(const id of ids){
+          const selBtn = document.getElementById('sel_' + id);
+          if(!selBtn || !selBtn.classList.contains('selected')) continue;
+          const area = document.getElementById(id);
+          if(!area) continue;
+          // Find the kv-table tbody
+          const table = area.querySelector('.kv-table');
+          if(!table) continue;
+          const tbody = table.querySelector('tbody');
+          if(!tbody) continue;
+          for(const tr of tbody.children){
+            const field = tr.querySelector('.kv-field');
+            const type = tr.querySelector('.kv-type');
+            const fieldVal = field ? field.value.trim() : '';
+            const typeVal = type ? type.value.trim() : '';
+            if(fieldVal && typeVal){ hasComplete = true; break; }
+          }
+          if(hasComplete) break;
+        }
+        submitBtn.disabled = !hasComplete;
+        submitBtn.style.opacity = hasComplete ? 1 : 0.6;
+      }
+
+      // Enable/disable the Add field button for an area: only enable when the last row has both fieldName and type
+      function updateAddButtonState(area){
+        if(!area) return;
+        const addBtn = area.querySelector('.add-field-btn');
+        if(!addBtn) return;
+        // Find the kv-table tbody
+        const table = area.querySelector('.kv-table');
+        if(!table) { addBtn.disabled = false; return; }
+        const tbody = table.querySelector('tbody');
+        if(!tbody || tbody.children.length === 0){
+          addBtn.disabled = false;
+          return;
+        }
+        const last = tbody.children[tbody.children.length - 1];
+        if(!last) { addBtn.disabled = false; return; }
+        // Find field and type inputs in last row
+        const field = last.querySelector('.kv-field');
+        const type = last.querySelector('.kv-type');
+        const fieldVal = field ? field.value.trim() : '';
+        const typeVal = type ? type.value.trim() : '';
+        addBtn.disabled = !(fieldVal && typeVal);
+      }
+
+      // Small improvement: toggle checkbox if user removes all kv rows, leave selection independent
+
+      // Hide responseBox whenever the DOM updates in the main panel (keeps messages from persisting after edits)
+      (function(){
+        const panelEl = document.querySelector('.panel') || document.body;
+        const hideResponse = () => { try{ responseBox.style.display = 'none'; }catch(e){} };
+        const mo = new MutationObserver((mutations)=>{
+          try{
+            const now = Date.now();
+            // skip hiding if a response was set recently (2.5s)
+            if(now - lastResponseSet < 2500) return;
+          }catch(e){}
+          // otherwise hide as before
+          hideResponse();
+        });
+        mo.observe(panelEl, { attributes: true, childList: true, subtree: true, characterData: true });
+      })();
+    </script>
+  </body>
+</html>
