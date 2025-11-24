@@ -744,7 +744,7 @@
           };
 
           // API endpoint (local Flask proxy)
-          const apiEndpoint = 'http://localhost:5000/api/';
+          const apiEndpoint = 'https://<YOUR-ALB-ENDPOINT>/api/'; // Replace <YOUR-ALB-ENDPOINT> with your actual ALB endpoint
           submitBtn.disabled = true; submitBtn.textContent = 'Submitting...'; submitBtn.style.opacity = 0.6;
           
           try{
