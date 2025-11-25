@@ -744,7 +744,7 @@
           };
 
           // API endpoint (new POST-only URL)
-          const apiEndpoint = 'https://kb1novjcw0.execute-api.us-east-1.amazonaws.com/api/upload';
+          const apiEndpoint = 'https://kutttnmoo9.execute-api.us-east-1.amazonaws.com/api';
           submitBtn.disabled = true; submitBtn.textContent = 'Submitting...'; submitBtn.style.opacity = 0.6;
 
           try{
@@ -757,11 +757,12 @@
             });
 
             if(res.ok) {
+              // The new API returns a JSON object with statusCode, headers, and body (body is a string)
               const result = await res.json();
               responseBox.style.display='block'; 
               responseBox.style.background='#eef7ef';
               responseBox.style.color='var(--success)';
-              responseBox.textContent = 'Success! Extracted ' + Object.keys(result.results || {}).length + ' fields. Check console for details.';
+              responseBox.textContent = 'Success! Status: ' + result.statusCode + '. Body: ' + result.body;
               console.log('API Response:', result);
               lastResponseSet = Date.now();
             } else {
