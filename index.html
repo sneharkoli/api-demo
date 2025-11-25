@@ -502,6 +502,7 @@
         const sourceId = arguments[4] || (area && area.id) || '';
         const tbody = arguments[5];
         const tr = document.createElement('tr');
+        tr.className = 'kv-row';
         // Field name input
         const tdField = document.createElement('td');
         tdField.style.verticalAlign = 'top';
