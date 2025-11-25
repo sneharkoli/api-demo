@@ -743,10 +743,10 @@
             outputType: outputType
           };
 
-          // API endpoint (local Flask proxy)
-          const apiEndpoint = 'https://hzvtu183fi.execute-api.us-east-1.amazonaws.com/upload/'; // Replace <YOUR-ALB-ENDPOINT> with your actual ALB endpoint
+          // API endpoint (new POST-only URL)
+          const apiEndpoint = 'https://kb1novjcw0.execute-api.us-east-1.amazonaws.com/api/upload';
           submitBtn.disabled = true; submitBtn.textContent = 'Submitting...'; submitBtn.style.opacity = 0.6;
-          
+
           try{
             const res = await fetch(apiEndpoint, { 
               method: 'POST', 
@@ -755,7 +755,7 @@
               },
               body: JSON.stringify(payload)
             });
-            
+
             if(res.ok) {
               const result = await res.json();
               responseBox.style.display='block'; 
