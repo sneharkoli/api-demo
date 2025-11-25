@@ -454,7 +454,10 @@
         // header showing source label
         const id = area.id || '';
         const labels = { raw: 'Raw text', queries: 'Queries', forms: 'Forms', signatures: 'Signatures', tables: 'Tables' };
-        const header = document.createElement('div'); header.className = 'kv-header'; header.textContent = 'Source: ' + (labels[id] || id);
+        const header = document.createElement('div'); header.className = 'kv-header';
+        header.innerHTML = 'Source: ' + (labels[id] || id) +
+          '<span style="color:#ff4d4f;font-weight:400;font-size:12px;margin-left:10px">* Required fields: <b>Field Name</b>, <b>Type</b>' +
+          (id==='queries' ? ', <b>searchQuery</b>' : (id==='raw' ? ', <b>searchRegex</b>' : '')) + '</span>';
         area.appendChild(header);
 
         // Table for rows
@@ -514,9 +517,11 @@
         const tdSearch = document.createElement('td'); tdSearch.style.verticalAlign = 'top'; tdSearch.style.padding = '4px';
         let inpSearch;
         if (sourceId === 'queries') {
-          inpSearch = document.createElement('input'); inpSearch.type='text'; inpSearch.className='kv-search'; inpSearch.placeholder='searchQuery'; inpSearch.value = searchRegex; inpSearch.style.width = '100%';
+          inpSearch = document.createElement('input'); inpSearch.type='text'; inpSearch.className='kv-search'; inpSearch.placeholder='searchQuery (required)'; inpSearch.value = searchRegex; inpSearch.style.width = '100%';
+        } else if (sourceId === 'raw') {
+          inpSearch = document.createElement('input'); inpSearch.type='text'; inpSearch.className='kv-search'; inpSearch.placeholder='searchRegex (required)'; inpSearch.value = searchRegex; inpSearch.style.width = '100%';
         } else {
-          inpSearch = document.createElement('input'); inpSearch.type='text'; inpSearch.className='kv-search'; inpSearch.placeholder='searchRegex'; inpSearch.value = searchRegex; inpSearch.style.width = '100%';
+          inpSearch = document.createElement('input'); inpSearch.type='text'; inpSearch.className='kv-search'; inpSearch.placeholder='searchRegex (optional)'; inpSearch.value = searchRegex; inpSearch.style.width = '100%';
         }
         tdSearch.appendChild(inpSearch);
         tr.appendChild(tdSearch);
@@ -639,14 +644,22 @@
           if(!area) continue;
           const rows = [...area.querySelectorAll('.kv-row')];
           for(const r of rows){
-            const inputs = r.querySelectorAll('input');
+            const inputs = r.querySelectorAll('input,select');
             const field = inputs[0];
-            const type = inputs[2];
+            const search = inputs[1];
+            const type = inputs[inputs.length-2];
             const fieldVal = field ? field.value.trim() : '';
             const typeVal = type ? type.value.trim() : '';
             // mark invalid if missing
             if(!fieldVal){ if(field) field.classList.add('invalid'); if(field) field.focus(); responseBox.style.display='block'; responseBox.textContent='Please fill required Field name and Type for all visible rows.'; lastResponseSet = Date.now(); return false; }
             if(!typeVal){ if(type) type.classList.add('invalid'); if(type) type.focus(); responseBox.style.display='block'; responseBox.textContent='Please fill required Field name and Type for all visible rows.'; lastResponseSet = Date.now(); return false; }
+            // Backend requires searchQuery for queries, searchRegex for raw_text
+            if(id==='queries' && (!search || !search.value.trim())){
+              if(search) search.classList.add('invalid'); if(search) search.focus(); responseBox.style.display='block'; responseBox.textContent='Please fill required searchQuery for Queries.'; lastResponseSet = Date.now(); return false;
+            }
+            if(id==='raw' && (!search || !search.value.trim())){
+              if(search) search.classList.add('invalid'); if(search) search.focus(); responseBox.style.display='block'; responseBox.textContent='Please fill required searchRegex for Raw text.'; lastResponseSet = Date.now(); return false;
+            }
           }
         }
         // clear any prior message
@@ -698,7 +711,7 @@
               // ignore completely blank rows
               if(fieldName === '') return;
               // Map source labels to match API expectation
-              const sourceMap = { raw: 'raw_text', queries: 'queries', forms: 'forms', signatures: 'signatures', tables: 'tables' };
+              const sourceMap = { raw: 'raw_text', queries: 'queries', forms: 'forms', signatures: 'signature', tables: 'tables' };
               const source = sourceMap[id] || id;
               typeVal = inputs[inputs.length-2] ? inputs[inputs.length-2].value : '';
               // queries
@@ -714,6 +727,8 @@
                 searchRegex = inputs[1] ? inputs[1].value.trim() : '';
                 const extraNum = inputs[3] ? parseInt(inputs[3].value) : 1;
                 fieldMetadata.push({ source, fieldName, searchRegex, type: typeVal, regexMatch: extraNum });
+              } else if (id === 'signatures') {
+                fieldMetadata.push({ source, fieldName, type: typeVal });
               } else {
                 searchRegex = inputs[1] ? inputs[1].value.trim() : '';
                 fieldMetadata.push({ source, fieldName, searchRegex, type: typeVal });
