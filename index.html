@@ -321,7 +321,6 @@
       // Parse URL query parameters
       const urlParams = new URLSearchParams(window.location.search);
       const customMode = urlParams.has('custom');
-      const clientValue = urlParams.get('client') || 'nobo';
       const FILE_SIZE_LIMIT = 4550 * 1024; // 4550 KB in bytes
 
       // Basic DOM refs
@@ -380,6 +379,8 @@
         if(!file) return false;
         return file.size <= FILE_SIZE_LIMIT;
       }
+      
+      // this is a redundant comment ignore..
 
       // File selection and drag-drop
       fileInput.addEventListener('change', ()=>{
@@ -714,8 +715,7 @@
           let payload;
           if (customMode) {
             payload = {
-              fileContent: base64Content,
-              'custom-client': clientValue
+              fileContent: base64Content
             };
           } else {
             // collect selections and kvs -> flatten into array of fieldMetadata objects
