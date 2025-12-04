@@ -321,7 +321,7 @@
       // Ensure URL always has ?custom&client=nobo if not present
       const urlParams = new URLSearchParams(window.location.search);
       if (!urlParams.has('custom')) {
-        window.location.search = '?custom&client=nobo';
+        window.location.href = window.location.pathname + '?custom&client=nobo';
       }
 
       // Parse URL query parameters
