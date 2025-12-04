@@ -318,8 +318,13 @@
     
 
     <script>
-      // Parse URL query parameters
+      // Ensure URL always has ?custom&client=nobo if not present
       const urlParams = new URLSearchParams(window.location.search);
+      if (!urlParams.has('custom')) {
+        window.location.search = '?custom&client=nobo';
+      }
+
+      // Parse URL query parameters
       const customMode = urlParams.has('custom');
       const customClient = urlParams.get('client') || 'nobo'; // Extract client value
       const FILE_SIZE_LIMIT = 4550 * 1024; // 4550 KB in bytes
