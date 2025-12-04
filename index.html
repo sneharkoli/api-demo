@@ -52,7 +52,7 @@
         margin-bottom:18px;
       }
       .logo {
-        width:5cm;height:5cm;border-radius:8px;background:--bg;
+        width:5cm;height:5cm;border-radius:8px;background:var(--bg);
         display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:18px;overflow:hidden;
         overflow: hidden;
         height: 100px;
@@ -88,7 +88,7 @@
       .add-field-btn:not(:disabled){box-shadow:0 6px 18px rgba(11,92,255,0.12)}
 
       /* Controls */
-      .controls{background:#fbfbfd;padding:14px;border-radius:10px;border:1px solid #eef2ff}
+      .controls{background:#fbfbfd;padding:14px;border-radius:10px;border:1px solid #eef2ff;max-height:640px;overflow:auto}
       .section{display:flex;flex-direction:column;gap:10px}
       .option-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
       .option-left{display:flex;align-items:center;gap:10px}
@@ -97,7 +97,6 @@
       .sel-btn.selected{background:var(--accent);color:white;border-color:transparent}
       .sel-btn.expanded{box-shadow:0 4px 14px rgba(11,92,255,0.12)}
 
-      .kv-area{margin-top:8px;border-radius:8px;padding:10px;background:#ffffff;border:1px dashed #e6eefc}
       .kv-area{margin-top:8px;border-radius:8px;padding:10px;background:#ffffff;border:1px dashed #e6eefc;max-height:360px;overflow:auto}
       .kv-header{font-weight:600;margin-bottom:8px;color:var(--accent);font-size:13px}
       .kv-table { width: 100%; border-collapse: collapse; margin-bottom: 8px; font-size: 14px; }
@@ -137,23 +136,6 @@
                     cursor: not-allowed;
                     opacity: 0.8;
                     border: 1px solid #e6eefc;
-                  }
-                  .output-type-group {
-                    display: flex;
-                    align-items: center;
-                    gap: 18px;
-                    margin: 18px 0 0 0;
-                    padding: 12px 18px;
-                    border-radius: 8px;
-                    background: #fbfbfd;
-                    border: 1px solid #eef2ff;
-                    font-size: 15px;
-                    color: var(--muted);
-                    font-family: inherit;
-                  }
-                  .output-type-radio {
-                    accent-color: var(--accent);
-                    margin-right: 6px;
                   }
                   .output-type-label {
                     font-weight: 500;
@@ -199,7 +181,6 @@
         box-shadow: 0 6px 18px rgba(11,92,255,0.06);
       }
       .kv-row .remove{background:#ff4d4f;color:white;border:none;padding:6px 8px;border-radius:6px;cursor:pointer;margin-left:6px}
-      .controls{background:#fbfbfd;padding:14px;border-radius:10px;border:1px solid #eef2ff;max-height:640px;overflow:auto}
 
       /* Custom scrollbar - WebKit */
       .controls::-webkit-scrollbar, .kv-area::-webkit-scrollbar, .upload-area::-webkit-scrollbar { height:10px; width:10px }
@@ -275,14 +256,7 @@
             <div id="responseBox" class="response" role="status"></div>
           </div>
 
-          <!-- Output type radio group placed here -->
-          <div id="outputTypeGroup" class="output-type-group">
-            <span class="output-type-label">Output type:</span>
-            <label><input type="radio" name="outputType" value="json" class="output-type-radio" checked> JSON</label>
-            <label><input type="radio" name="outputType" value="text" class="output-type-radio"> Text</label>
-          </div>
-
-          <div style="margin-top:14px;color:var(--muted);font-size:13px;font-family:inherit;">
+          <div id="tipText" style="margin-top:14px;color:var(--muted);font-size:13px;font-family:inherit;">
             Tip: Use the expand [+] on the right to attach metadata key/value pairs for each selected category.
           </div>
         </div>
@@ -344,6 +318,11 @@
     
 
     <script>
+      // Parse URL query parameters
+      const urlParams = new URLSearchParams(window.location.search);
+      const customMode = urlParams.has('custom');
+      const FILE_SIZE_LIMIT = 4550 * 1024; // 4550 KB in bytes
+
       // Basic DOM refs
       const fileInput = document.getElementById('fileInput');
       const uploadArea = document.getElementById('uploadArea');
@@ -351,7 +330,15 @@
       const submitBtn = document.getElementById('submitBtn');
       const clearBtn = document.getElementById('clearBtn');
       const responseBox = document.getElementById('responseBox');
+      const controlsAside = document.querySelector('.controls');
       let lastResponseSet = 0;
+
+      // Hide controls and output type group if in custom mode
+      if (customMode) {
+        if (controlsAside) controlsAside.style.display = 'none';
+        const tipText = document.getElementById('tipText');
+        if (tipText) tipText.style.display = 'none';
+      }
 
       // User profile dropdown toggle
       const userIcon = document.getElementById('userIcon');
@@ -387,15 +374,30 @@
         return isPdf || isImage;
       }
 
+      // Utility: validate file size
+      function isValidFileSize(file){
+        if(!file) return false;
+        return file.size <= FILE_SIZE_LIMIT;
+      }
+
       // File selection and drag-drop
       fileInput.addEventListener('change', ()=>{
         if(fileInput.files.length > 1){
           alert('Only one file is allowed per submission. Keeping the first file.');
+          const dataTransfer = new DataTransfer();
+          dataTransfer.items.add(fileInput.files[0]);
+          fileInput.files = dataTransfer.files;
         }
         const f = fileInput.files[0];
         if(!f){ selectedInfo.textContent = ''; return; }
         if(!isValidFile(f)){
           alert('Invalid file type. Please select a PDF or image file (including TIFF).');
+          fileInput.value = '';
+          selectedInfo.textContent = '';
+          return;
+        }
+        if(!isValidFileSize(f)){
+          alert('File size exceeds the 4550 KB limit. Please select a smaller file.');
           fileInput.value = '';
           selectedInfo.textContent = '';
           return;
@@ -414,6 +416,7 @@
         if(files.length > 1){ alert('Only one file is allowed per submission. The first file will be used.'); }
         const f = files[0];
         if(!isValidFile(f)) { alert('Invalid file type.'); return; }
+        if(!isValidFileSize(f)) { alert('File size exceeds the 4550 KB limit.'); return; }
         // assign to file input (single file)
         const dataTransfer = new DataTransfer(); dataTransfer.items.add(f); fileInput.files = dataTransfer.files;
         selectedInfo.textContent = `Selected: ${f.name} — ${Math.round(f.size/1024)} KB`;
@@ -669,74 +672,31 @@
       }
 
       // Submit action: collect file, options, kv pairs -> POST request
-      // Output type radios
       let outputType = 'json';
-      // Output type radio group event listeners
-      document.querySelectorAll('input[type=radio][name=outputType]').forEach(radio => {
-        radio.addEventListener('change', function() {
-          outputType = this.value;
-        });
-      });
 
       submitBtn.addEventListener('click', async ()=>{
         // remove previous invalid markers when attempting submit
         document.querySelectorAll('.kv-row input.invalid').forEach(i=>i.classList.remove('invalid'));
         let valid = true;
-        // Validate all field names
-        document.querySelectorAll('.kv-row .kv-field').forEach(inp => {
-          if (!/^\w+$/.test(inp.value.trim())) {
-            inp.classList.add('invalid');
-            valid = false;
-          }
-        });
-        if(!validateVisibleRows() || !valid) return; 
-        responseBox.style.display = 'none'; responseBox.textContent = '';
+
         const f = fileInput.files[0];
         if(!f){ alert('Please choose a file first.'); return; }
         if(!isValidFile(f)){ alert('Invalid file type.'); return; }
+        if(!isValidFileSize(f)){ alert('File size exceeds the 4550 KB limit.'); return; }
 
-        // collect selections and kvs -> flatten into array of fieldMetadata objects
-        const fieldMetadata = [];
-        ['raw','queries','forms','signatures','tables'].forEach(id=>{           
-          const selBtn = document.getElementById('sel_' + id);
-          const checked = selBtn && selBtn.classList.contains('selected');
-          if(!checked) return;
-          const area = document.getElementById(id);
-          if(area){
-            const rows = [...area.querySelectorAll('.kv-row')];
-            rows.forEach(r=>{
-              const inputs = r.querySelectorAll('input,select');
-              const fieldName = inputs[0] ? inputs[0].value.trim() : '';
-              let searchRegex = '', searchQuery = '', regexGroup, regexMatch;
-              let typeVal = '', occurrenceIndex = 1;
-              // ignore completely blank rows
-              if(fieldName === '') return;
-              // Map source labels to match API expectation
-              const sourceMap = { raw: 'raw_text', queries: 'queries', forms: 'forms', signatures: 'signature', tables: 'tables' };
-              const source = sourceMap[id] || id;
-              typeVal = inputs[inputs.length-2] ? inputs[inputs.length-2].value : '';
-              // queries
-              if (id === 'queries') {
-                searchQuery = inputs[1] ? inputs[1].value.trim() : '';
-                fieldMetadata.push({ source, fieldName, searchQuery, type: typeVal });
-              } else if (id === 'raw') {
-                searchRegex = inputs[1] ? inputs[1].value.trim() : '';
-                const extraSelect = inputs[2] ? inputs[2].value : 'regexGroup';
-                const extraNum = inputs[3] ? parseInt(inputs[3].value) : 1;
-                fieldMetadata.push({ source, fieldName, searchRegex, type: typeVal, [extraSelect]: extraNum });
-              } else if (id === 'forms') {
-                searchRegex = inputs[1] ? inputs[1].value.trim() : '';
-                const extraNum = inputs[3] ? parseInt(inputs[3].value) : 1;
-                fieldMetadata.push({ source, fieldName, searchRegex, type: typeVal, regexMatch: extraNum });
-              } else if (id === 'signatures') {
-                fieldMetadata.push({ source, fieldName, type: typeVal });
-              } else {
-                searchRegex = inputs[1] ? inputs[1].value.trim() : '';
-                fieldMetadata.push({ source, fieldName, searchRegex, type: typeVal });
-              }
-            });
-          }
-        });
+        // In custom mode, skip metadata validation and submit with just file content
+        if (!customMode) {
+          // Validate all field names
+          document.querySelectorAll('.kv-row .kv-field').forEach(inp => {
+            if (!/^\w+$/.test(inp.value.trim())) {
+              inp.classList.add('invalid');
+              valid = false;
+            }
+          });
+          if(!validateVisibleRows() || !valid) return; 
+        }
+
+        responseBox.style.display = 'none'; responseBox.textContent = '';
 
         // Convert file to base64
         const reader = new FileReader();
@@ -749,15 +709,66 @@
           }
           const base64Content = btoa(binary);
 
-          // Build JSON payload matching API structure
-          const payload = {
-            fileName: f.name,
-            fileContent: base64Content,
-            clientId: "BROADRIDGE-CLIENT",
-            docType: "NOBO",
-            fieldMetadata: fieldMetadata,
-            outputType: outputType
-          };
+          // Build JSON payload - custom mode only includes fileContent
+          let payload;
+          if (customMode) {
+            payload = {
+              fileContent: base64Content
+            };
+          } else {
+            // collect selections and kvs -> flatten into array of fieldMetadata objects
+            const fieldMetadata = [];
+            ['raw','queries','forms','signatures','tables'].forEach(id=>{           
+              const selBtn = document.getElementById('sel_' + id);
+              const checked = selBtn && selBtn.classList.contains('selected');
+              if(!checked) return;
+              const area = document.getElementById(id);
+              if(area){
+                const rows = [...area.querySelectorAll('.kv-row')];
+                rows.forEach(r=>{
+                  const inputs = r.querySelectorAll('input,select');
+                  const fieldName = inputs[0] ? inputs[0].value.trim() : '';
+                  let searchRegex = '', searchQuery = '', regexGroup, regexMatch;
+                  let typeVal = '', occurrenceIndex = 1;
+                  // ignore completely blank rows
+                  if(fieldName === '') return;
+                  // Map source labels to match API expectation
+                  const sourceMap = { raw: 'raw_text', queries: 'queries', forms: 'forms', signatures: 'signature', tables: 'tables' };
+                  const source = sourceMap[id] || id;
+                  typeVal = inputs[inputs.length-2] ? inputs[inputs.length-2].value : '';
+                  // queries
+                  if (id === 'queries') {
+                    searchQuery = inputs[1] ? inputs[1].value.trim() : '';
+                    fieldMetadata.push({ source, fieldName, searchQuery, type: typeVal });
+                  } else if (id === 'raw') {
+                    searchRegex = inputs[1] ? inputs[1].value.trim() : '';
+                    const extraSelect = inputs[2] ? inputs[2].value : 'regexGroup';
+                    const extraNum = inputs[3] ? parseInt(inputs[3].value) : 1;
+                    fieldMetadata.push({ source, fieldName, searchRegex, type: typeVal, [extraSelect]: extraNum });
+                  } else if (id === 'forms') {
+                    searchRegex = inputs[1] ? inputs[1].value.trim() : '';
+                    const extraNum = inputs[3] ? parseInt(inputs[3].value) : 1;
+                    fieldMetadata.push({ source, fieldName, searchRegex, type: typeVal, regexMatch: extraNum });
+                  } else if (id === 'signatures') {
+                    fieldMetadata.push({ source, fieldName, type: typeVal });
+                  } else {
+                    searchRegex = inputs[1] ? inputs[1].value.trim() : '';
+                    fieldMetadata.push({ source, fieldName, searchRegex, type: typeVal });
+                  }
+                });
+              }
+            });
+
+            payload = {
+              fileName: f.name,
+              fileContent: base64Content,
+              clientId: "BROADRIDGE-CLIENT",
+              docType: "NOBO",
+              fieldMetadata: fieldMetadata,
+              outputType: outputType
+            };
+          }
+          
           console.log('Payload:', JSON.stringify(payload));
 
           // API endpoint (new POST-only URL)
@@ -820,7 +831,15 @@
       function updateSubmitState(){
         const f = fileInput.files[0];
         if(!f){ submitBtn.disabled = true; submitBtn.style.opacity = 0.6; return; }
-        // require at least one metadata row with both fieldName and type filled in a selected source
+        
+        // In custom mode, only require file to be present
+        if (customMode) {
+          submitBtn.disabled = false;
+          submitBtn.style.opacity = 1;
+          return;
+        }
+
+        // Otherwise require at least one metadata row with both fieldName and type filled in a selected source
         const ids = ['raw','queries','forms','signatures','tables'];
         let hasComplete = false;
         for(const id of ids){
